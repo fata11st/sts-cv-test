@@ -136,3 +136,32 @@ def test_bbox_clip_to_unit_preserves_valid_bounds() -> None:
     assert pytest.approx(x2, abs=1e-6) == 1.0
     assert pytest.approx(y1, abs=1e-6) == 0.0
     assert pytest.approx(y2, abs=1e-6) == 0.07
+
+
+def test_confusion_matrix_and_tp_fp_fn_matching() -> None:
+    """Проверяет расчёт confusion matrix (TP, FP, FN и перепутывание классов)."""
+    from src.tensorboard_logger import DetectionPred, compute_confusion_matrix, match_predictions_to_gt
+
+    gt = [
+        BBox(1, 0.2, 0.2, 0.1, 0.1),  # car (TP)
+        BBox(7, 0.5, 0.5, 0.1, 0.1),  # police -> predicted as car (class swap)
+        BBox(10, 0.8, 0.8, 0.05, 0.1),  # pedestrian (FN)
+    ]
+    preds = [
+        DetectionPred(1, 0.90, BBox(1, 0.2, 0.2, 0.1, 0.1)),   # TP car
+        DetectionPred(1, 0.80, BBox(1, 0.5, 0.5, 0.1, 0.1)),   # confused police -> car
+        DetectionPred(4, 0.60, BBox(4, 0.9, 0.1, 0.1, 0.1)),   # FP truck on background
+        DetectionPred(1, 0.10, BBox(1, 0.1, 0.9, 0.1, 0.1)),   # below conf_threshold=0.25
+    ]
+
+    tps, fps, fns = match_predictions_to_gt(gt, preds, iou_threshold=0.5, conf_threshold=0.25)
+    assert len(tps) == 1
+    assert len(fps) == 2
+    assert len(fns) == 2
+
+    cm = compute_confusion_matrix([gt], [preds], num_classes=11, iou_threshold=0.5, conf_threshold=0.25)
+    assert cm.shape == (12, 12)
+    assert cm[1, 1] == 1.0   # true car -> pred car
+    assert cm[1, 7] == 1.0   # true police -> pred car
+    assert cm[4, 11] == 1.0  # background -> pred truck (FP)
+    assert cm[11, 10] == 1.0 # true pedestrian -> background (FN)

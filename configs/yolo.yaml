@@ -18,11 +18,12 @@ training:
   batch: 8
   workers: 0
   optimizer: AdamW
-  lr0: 0.002
-  lrf: 0.05
+  lr0: 0.0005
+  lrf: 0.1
   weight_decay: 0.0005
   warmup_epochs: 2.0
-  patience: 20
+  warmup_bias_lr: 0.005
+  patience: 25
   cos_lr: true
   close_mosaic: 5
   freeze: 0

@@ -32,6 +32,7 @@ from src.tensorboard_logger import (
     DetectionPred,
     ExperimentTensorBoardLogger,
     attach_ultralytics_callbacks,
+    compute_confusion_matrix,
     render_confusion_matrix_figure,
     render_gt_vs_error_analysis,
     render_pr_f1_curves,
@@ -215,7 +216,7 @@ def _evaluate_and_log_split(
         plots=False,
         verbose=False,
     )
-    summary, per_class_rows, cm_mat = _extract_val_summary(val_res, classes, gt_counts)
+    summary, per_class_rows, _ = _extract_val_summary(val_res, classes, gt_counts)
 
     # Логируем метрики test в TensorBoard
     if split_name == "test":
@@ -223,28 +224,7 @@ def _evaluate_and_log_split(
             tb_logger.log_scalar(f"test/{k}", v, step)
     tb_logger.log_per_class_metrics(split_name, per_class_rows, step=step)
 
-    # Матрицы ошибок -> PNG в artifacts/ + TensorBoard Images
-    if cm_mat is not None:
-        cm_norm_img = render_confusion_matrix_figure(
-            cm_mat,
-            classes,
-            title=f"Confusion Matrix — {split_name} (нормализованная)",
-            normalize=True,
-        )
-        cm_norm_img.save(artifacts_dir / f"confusion_matrix_{split_name}_normalized.png")
-        tb_logger.log_image(f"eval/confusion_matrix_{split_name}_normalized", cm_norm_img, step=step)
-
-        if split_name == "val":
-            cm_raw_img = render_confusion_matrix_figure(
-                cm_mat,
-                classes,
-                title="Confusion Matrix — val (абсолютные значения)",
-                normalize=False,
-            )
-            cm_raw_img.save(artifacts_dir / "confusion_matrix_val.png")
-            tb_logger.log_image("eval/confusion_matrix_val", cm_raw_img, step=step)
-
-    # Инференс на всех изображениях сплита для PR/F1 и TP/FP/FN Error Analysis
+    # Инференс на всех изображениях сплита для Confusion Matrix, PR/F1 и TP/FP/FN Error Analysis
     all_preds: list[list[DetectionPred]] = []
     for img_p in img_paths:
         pred_res = model.predict(
@@ -265,6 +245,33 @@ def _evaluate_and_log_split(
                     b, _ = BBox(int(cid), float(xc), float(yc), float(bw), float(bh)).clip_to_unit()
                     preds_i.append(DetectionPred(class_id=int(cid), conf=float(cf), box=b))
         all_preds.append(preds_i)
+
+    # Матрицы ошибок (собственный точный расчёт, согласованный с Error Analysis) -> PNG + TensorBoard
+    cm_mat = compute_confusion_matrix(
+        all_gt=all_gt,
+        all_preds=all_preds,
+        num_classes=len(classes),
+        iou_threshold=iou_thr,
+        conf_threshold=conf_thr,
+    )
+    cm_norm_img = render_confusion_matrix_figure(
+        cm_mat,
+        classes,
+        title=f"Confusion Matrix — {split_name} (нормализованная, conf>={conf_thr:.2f})",
+        normalize=True,
+    )
+    cm_norm_img.save(artifacts_dir / f"confusion_matrix_{split_name}_normalized.png")
+    tb_logger.log_image(f"eval/confusion_matrix_{split_name}_normalized", cm_norm_img, step=step)
+
+    if split_name == "val":
+        cm_raw_img = render_confusion_matrix_figure(
+            cm_mat,
+            classes,
+            title=f"Confusion Matrix — val (абсолютные значения, conf>={conf_thr:.2f})",
+            normalize=False,
+        )
+        cm_raw_img.save(artifacts_dir / "confusion_matrix_val.png")
+        tb_logger.log_image("eval/confusion_matrix_val", cm_raw_img, step=step)
 
     pr_img, opt_thr = render_pr_f1_curves(all_gt, all_preds, iou_threshold=iou_thr, split_name=split_name)
     pr_img.save(artifacts_dir / f"pr_f1_curves_{split_name}.png")
@@ -501,7 +508,8 @@ def run_experiment(
         "lrf": float(train_cfg.get("lrf", 0.05)),
         "weight_decay": float(train_cfg.get("weight_decay", 0.0005)),
         "warmup_epochs": float(train_cfg.get("warmup_epochs", 2.0)),
-        "patience": int(train_cfg.get("patience", 20)),
+        "warmup_bias_lr": float(train_cfg.get("warmup_bias_lr", 0.005)),
+        "patience": int(train_cfg.get("patience", 25)),
         "cos_lr": bool(train_cfg.get("cos_lr", True)),
         "close_mosaic": int(train_cfg.get("close_mosaic", 5)),
         "amp": use_amp,

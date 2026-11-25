@@ -128,6 +128,52 @@ def match_predictions_to_gt(
     return tps, fps, fns
 
 
+def compute_confusion_matrix(
+    all_gt: list[list[BBox]],
+    all_preds: list[list[DetectionPred]],
+    num_classes: int,
+    iou_threshold: float = 0.50,
+    conf_threshold: float = 0.25,
+) -> np.ndarray:
+    """Строит матрицу ошибок (num_classes + 1) x (num_classes + 1) с классом background.
+
+    Строки — предсказанный класс (0..N-1, N=background для FN),
+    столбцы — истинный класс (0..N-1, N=background для FP).
+    """
+    bg = num_classes
+    matrix = np.zeros((num_classes + 1, num_classes + 1), dtype=np.float64)
+
+    for gts, preds in zip(all_gt, all_preds, strict=True):
+        filtered = sorted(
+            [p for p in preds if p.conf >= conf_threshold],
+            key=lambda p: -p.conf,
+        )
+        matched_gt: set[int] = set()
+        for pred in filtered:
+            best_iou = 0.0
+            best_gi = -1
+            for gi, gt in enumerate(gts):
+                if gi in matched_gt:
+                    continue
+                iou_val = pred.box.iou(gt)
+                if iou_val >= iou_threshold and iou_val > best_iou:
+                    best_iou = iou_val
+                    best_gi = gi
+            if best_gi >= 0:
+                matched_gt.add(best_gi)
+                true_cls = gts[best_gi].class_id
+                if 0 <= pred.class_id < num_classes and 0 <= true_cls < num_classes:
+                    matrix[pred.class_id, true_cls] += 1.0
+            elif 0 <= pred.class_id < num_classes:
+                matrix[pred.class_id, bg] += 1.0
+
+        for gi, gt in enumerate(gts):
+            if gi not in matched_gt and 0 <= gt.class_id < num_classes:
+                matrix[bg, gt.class_id] += 1.0
+
+    return matrix
+
+
 def render_confusion_matrix_figure(
     matrix: np.ndarray,
     classes: list[str],
@@ -476,11 +522,26 @@ def _extract_device_mem_mb() -> float | None:
 def attach_ultralytics_callbacks(model: Any, tb_logger: ExperimentTensorBoardLogger) -> None:
     """Подключает коллбэки Ultralytics Trainer -> ExperimentTensorBoardLogger."""
 
+    seen_epochs: set[int] = set()
+
     def _on_train_epoch_start(trainer: Any) -> None:
         tb_logger._epoch_start_ts = time.perf_counter()
 
     def _on_fit_epoch_end(trainer: Any) -> None:
         epoch = int(getattr(trainer, "epoch", 0)) + 1
+        max_epochs = int(getattr(trainer, "epochs", epoch))
+        raw_metrics: dict[str, Any] = getattr(trainer, "metrics", {}) or {}
+        val_losses: dict[str, float] = {}
+        for k, v in raw_metrics.items():
+            if k.startswith("val/"):
+                short = k.replace("val/", "").replace("_loss", "")
+                val_losses[short] = float(v)
+
+        # Пропускаем дополнительный пост-тренировочный вызов final_eval (без val_losses и с epoch > epochs)
+        if epoch in seen_epochs or (not val_losses and epoch > max_epochs):
+            return
+        seen_epochs.add(epoch)
+
         elapsed = time.perf_counter() - tb_logger._epoch_start_ts
 
         # Train losses
@@ -495,14 +556,6 @@ def attach_ultralytics_callbacks(model: Any, tb_logger: ExperimentTensorBoardLog
                     train_losses[short] = float(v)
             except (RuntimeError, TypeError, ValueError, AttributeError):
                 logger.debug("Не удалось разобрать train loss на эпохе %d.", epoch)
-
-        # Validation losses & detection metrics
-        raw_metrics: dict[str, Any] = getattr(trainer, "metrics", {}) or {}
-        val_losses: dict[str, float] = {}
-        for k, v in raw_metrics.items():
-            if k.startswith("val/"):
-                short = k.replace("val/", "").replace("_loss", "")
-                val_losses[short] = float(v)
 
         det_metrics = {
             "precision": float(raw_metrics.get("metrics/precision(B)", 0.0)),
