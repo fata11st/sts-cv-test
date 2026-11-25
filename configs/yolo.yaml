@@ -1,0 +1,59 @@
+# Конфигурация воспроизводимого CV-эксперимента (Ultralytics YOLO + TensorBoard)
+# Все пути задаются относительно корня репозитория (без абсолютных путей).
+
+experiment:
+  name: yolo11n_traffic_baseline
+  seed: 42
+  runs_dir: runs
+  manifest_path: reports/manifest.sha256
+  deterministic: true
+
+model:
+  weights: yolo11n.pt
+  imgsz: 640
+  device: auto  # auto -> CUDA > MPS > CPU
+
+training:
+  epochs: 25
+  batch: 8
+  workers: 0
+  optimizer: AdamW
+  lr0: 0.002
+  lrf: 0.05
+  weight_decay: 0.0005
+  warmup_epochs: 2.0
+  patience: 20
+  cos_lr: true
+  close_mosaic: 5
+  freeze: 0
+  amp: auto  # true на CUDA, false на MPS/CPU для численной стабильности
+
+augmentations:
+  # Доменные настройки для дорожных CCTV-камер:
+  # flipud=0.0, т.к. дорожные сцены никогда не перевёрнуты вертикально.
+  mosaic: 0.8
+  mixup: 0.05
+  copy_paste: 0.1
+  degrees: 0.0
+  translate: 0.1
+  scale: 0.4
+  fliplr: 0.5
+  flipud: 0.0
+  hsv_h: 0.015
+  hsv_s: 0.6
+  hsv_v: 0.4
+
+evaluation:
+  conf_threshold: 0.25
+  iou_threshold: 0.50
+  max_vis_samples: 6
+  run_test_split: true
+  benchmark_inference: true
+  benchmark_iters: 20
+
+dry_run:
+  epochs: 1
+  imgsz: 320
+  batch: 4
+  max_vis_samples: 3
+  benchmark_iters: 5
