@@ -1,0 +1,49 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE & OS
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Secrets & local env
+.env
+.env.*
+*.pem
+*.key
+
+# Model weights & binaries (do not commit per Git policy)
+*.pt
+*.pth
+*.onnx
+*.engine
+*.mlpackage/
+weights/
+.cache/
+
+# Large / generated datasets (keep .gitkeep & curated text overlays)
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+
+# Experiment runs & TensorBoard logs (keep .gitkeep)
+runs/*
+!runs/.gitkeep
+
+# Temporary audit/scratch outputs
+tmp/
+*.log
