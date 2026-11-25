@@ -1,0 +1,177 @@
+{
+  "schema_version": "1.0",
+  "source_dataset": "test_data/traffic_v5_mini",
+  "total_images": 40,
+  "files_modified_or_added": 16,
+  "entries": [
+    {
+      "stem": "4d3c2d6s-1920",
+      "action": "fixed_and_completed",
+      "raw_boxes": 2,
+      "curated_boxes": 3,
+      "defects_fixed": [
+        "WRONG_CLASS_ID(police->car)",
+        "MISSING_OBJECT(trailer)"
+      ],
+      "notes": "Исправлен класс белой Mazda (police -> car) и добавлен пропущенный прицеп (trailer) на переднем плане."
+    },
+    {
+      "stem": "Снимок экрана от 2023-06-05 16-05-35",
+      "action": "fixed_and_completed",
+      "raw_boxes": 49,
+      "curated_boxes": 51,
+      "defects_fixed": [
+        "BOX_EXCEEDS_BOUNDS(lines 17,37)",
+        "SHIFTED_BOXES_Y(+0.20 on lines 17,33,35,36,37)",
+        "WRONG_CLASS_ID(fire_truck->police, bus->police)",
+        "MISSING_OBJECTS(2 cars)"
+      ],
+      "notes": "Возвращены на место 5 смещённых вниз боксов (вкл. 2 с y2>1.0), исправлены классы спецтранспорта ДПС (fire_truck/bus -> police) и добавлены 2 пропущенные машины."
+    },
+    {
+      "stem": "Снимок экрана от 2023-06-07 14-48-31",
+      "action": "completed",
+      "raw_boxes": 15,
+      "curated_boxes": 24,
+      "defects_fixed": [
+        "INCOMPLETE_ANNOTATION(9 missing objects)"
+      ],
+      "notes": "Восстановлены 9 пропущенных объектов (6 пешеходов, 3 автомобиля), сверённых с соседним кадром той же камеры 14-47-51."
+    },
+    {
+      "stem": "Снимок экрана от 2023-06-07 16-42-06",
+      "action": "fixed_and_completed",
+      "raw_boxes": 45,
+      "curated_boxes": 46,
+      "defects_fixed": [
+        "UNKNOWN_CLASS_ID(11->10 on lines 34,41)",
+        "WRONG_CLASS_ID(bus->car on lines 22,23,24)",
+        "MISSING_OBJECT(yellow van)"
+      ],
+      "notes": "Заменены неизвестные class_id=11 на pedestrian (10), исправлены 3 ошибочных bus -> car на дальнем плане и добавлен пропущенный жёлтый фургон."
+    },
+    {
+      "stem": "Снимок экрана от 2023-06-08 11-38-52",
+      "action": "fixed_and_completed",
+      "raw_boxes": 18,
+      "curated_boxes": 19,
+      "defects_fixed": [
+        "BOX_EXCEEDS_BOUNDS(lines 1,2)",
+        "GHOST_BOXES(lines 2,4,6,13)",
+        "SHIFTED_BOX(line 16 pedestrian)",
+        "MISSING_OBJECTS(5 cars)"
+      ],
+      "notes": "Исправлен растянутый бокс пожарной (y2=1.09), удалены 4 фантомных бокса (вкл. ambulance с y1=-0.024), поправлен смещённый пешеход и добавлены 5 пропущенных автомобилей."
+    },
+    {
+      "stem": "11_170709082023",
+      "action": "completed",
+      "raw_boxes": 34,
+      "curated_boxes": 35,
+      "defects_fixed": [
+        "MISSING_OBJECT(car bottom-left)"
+      ],
+      "notes": "Добавлен пропущенный белый автомобиль в левом нижнем углу (присутствует в разметке соседнего кадра 12_170709082023)."
+    },
+    {
+      "stem": "0 - 2025-04-16 16-59-56-449_00009570",
+      "action": "annotated_missing",
+      "raw_boxes": 0,
+      "curated_boxes": 2,
+      "defects_fixed": [
+        "MISSING_LABEL_FILE"
+      ],
+      "notes": "Создана разметка для кадра трассы М-11: белый фургон (truck) и встречная фура (lorry, по аналогии с парным кадром 00026790)."
+    },
+    {
+      "stem": "000000012993",
+      "action": "annotated_missing",
+      "raw_boxes": 0,
+      "curated_boxes": 6,
+      "defects_fixed": [
+        "MISSING_LABEL_FILE"
+      ],
+      "notes": "Создана разметка: автобус, автомобиль, 2 велосипеда (bicycle) и 2 велосипедиста (pedestrian)."
+    },
+    {
+      "stem": "000000137491",
+      "action": "annotated_missing",
+      "raw_boxes": 0,
+      "curated_boxes": 11,
+      "defects_fixed": [
+        "MISSING_LABEL_FILE"
+      ],
+      "notes": "Создана разметка: мотоцикл на переднем плане (единый точный бокс), припаркованный велосипед и 9 пешеходов на заднем плане."
+    },
+    {
+      "stem": "000000403134",
+      "action": "annotated_missing",
+      "raw_boxes": 0,
+      "curated_boxes": 5,
+      "defects_fixed": [
+        "MISSING_LABEL_FILE"
+      ],
+      "notes": "Создана разметка: 2 велосипеда (bicycle) и 3 человека (pedestrian: скейтбордист и 2 велосипедиста)."
+    },
+    {
+      "stem": "000000566364",
+      "action": "annotated_missing",
+      "raw_boxes": 0,
+      "curated_boxes": 17,
+      "defects_fixed": [
+        "MISSING_LABEL_FILE"
+      ],
+      "notes": "Создана разметка: бортовой грузовичок (truck), велотележка (bicycle) и 15 пешеходов/посетителей рынка (люди внутри кабины исключены по конвенции)."
+    },
+    {
+      "stem": "102_9aug202317009",
+      "action": "annotated_missing",
+      "raw_boxes": 0,
+      "curated_boxes": 32,
+      "defects_fixed": [
+        "MISSING_LABEL_FILE"
+      ],
+      "notes": "Создана разметка для кадра перекрёстка (парного к 10_9aug202317009): 26 автомобилей, 1 грузовик, 1 прицеп (trailer) и 4 пешехода."
+    },
+    {
+      "stem": "1649839828.0003297",
+      "action": "annotated_missing",
+      "raw_boxes": 0,
+      "curated_boxes": 24,
+      "defects_fixed": [
+        "MISSING_LABEL_FILE"
+      ],
+      "notes": "Создана разметка для широкоформатного перекрёстка: зелёный автобус (bus), 2 грузовых фургона (truck), 16 автомобилей и 5 пешеходов."
+    },
+    {
+      "stem": "Licoil_wide_1213",
+      "action": "annotated_missing",
+      "raw_boxes": 0,
+      "curated_boxes": 1,
+      "defects_fixed": [
+        "MISSING_LABEL_FILE"
+      ],
+      "notes": "Создана разметка для зимнего кадра трассы М-5 (Висловка): белый грузовой фургон (truck)."
+    },
+    {
+      "stem": "Screenshot_112",
+      "action": "annotated_missing",
+      "raw_boxes": 0,
+      "curated_boxes": 12,
+      "defects_fixed": [
+        "MISSING_LABEL_FILE"
+      ],
+      "notes": "Создана разметка: 2 коммерческих пикапа (truck) и 10 легковых автомобилей (car)."
+    },
+    {
+      "stem": "screenshot_1760",
+      "action": "annotated_missing",
+      "raw_boxes": 0,
+      "curated_boxes": 13,
+      "defects_fixed": [
+        "MISSING_LABEL_FILE"
+      ],
+      "notes": "Создана разметка: грузовик (truck), 2 автомобиля, велосипед (bicycle) и 9 пешеходов."
+    }
+  ]
+}
