@@ -445,6 +445,22 @@ def _load_curated_or_cleaned_boxes(
     return cleaned, stats
 
 
+_CYR_TRANSLIT: dict[str, str] = {
+    "а": "a", "б": "b", "в": "v", "г": "g", "д": "d", "е": "e", "ё": "e",
+    "ж": "zh", "з": "z", "и": "i", "й": "y", "к": "k", "л": "l", "м": "m",
+    "н": "n", "о": "o", "п": "p", "р": "r", "с": "s", "т": "t", "у": "u",
+    "ф": "f", "х": "kh", "ц": "ts", "ч": "ch", "ш": "sh", "щ": "shch",
+    "ъ": "", "ы": "y", "ь": "", "э": "e", "ю": "yu", "я": "ya",
+}
+
+
+def _ascii_slug(stem: str) -> str:
+    """Преобразует имя файла (включая кириллицу) в безопасный ASCII-идентификатор для reports/samples/."""
+    s = stem.replace("Снимок экрана от ", "screen_")
+    out = "".join(_CYR_TRANSLIT.get(ch, ch) for ch in s.lower())
+    return re.sub(r"[^0-9a-z_-]+", "_", out).strip("_") or "sample"
+
+
 def _load_unicode_font(size: int = 13) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
     """Загружает TrueType-шрифт DejaVuSans из matplotlib для корректного рендера кириллицы."""
     font_path = Path(matplotlib.get_data_path()) / "fonts" / "ttf" / "DejaVuSans.ttf"
@@ -1154,7 +1170,7 @@ def prepare_dataset(
         norm_h = normalize_stem(h_stem)
         if norm_h in by_stem:
             raw_lbl = input_dir / "labels" / f"{h_stem}.txt"
-            safe_slug = re.sub(r"[^0-9A-Za-zА-Яа-я_-]+", "_", h_stem).strip("_")
+            safe_slug = _ascii_slug(h_stem)
             _render_before_after_comparison(
                 sample=by_stem[norm_h],
                 raw_label_path=raw_lbl if raw_lbl.exists() else None,
@@ -1186,7 +1202,7 @@ def prepare_dataset(
             classes,
             title=f"[{s.split.upper()}] {s.filename} | group={s.group_id} | boxes={len(s.boxes)}",
         )
-        safe_slug = re.sub(r"[^0-9A-Za-zА-Яа-я_-]+", "_", s.stem).strip("_")
+        safe_slug = _ascii_slug(s.stem)
         rendered.save(samples_dir / f"sample_{s.split}_{idx:02d}_{safe_slug}.jpg", quality=88)
 
     # 7. Отчёт reports/dataset_report.md

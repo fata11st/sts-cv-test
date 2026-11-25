@@ -13,12 +13,14 @@ import logging
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import matplotlib
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont, ImageOps
-from torch.utils.tensorboard import SummaryWriter
+
+if TYPE_CHECKING:
+    from torch.utils.tensorboard import SummaryWriter
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -370,9 +372,11 @@ class ExperimentTensorBoardLogger:
     """Обёртка над torch.utils.tensorboard.SummaryWriter для CV-экспериментов YOLO."""
 
     def __init__(self, log_dir: Path) -> None:
+        from torch.utils.tensorboard import SummaryWriter
+
         self.log_dir = Path(log_dir)
         self.log_dir.mkdir(parents=True, exist_ok=True)
-        self.writer = SummaryWriter(log_dir=str(self.log_dir))
+        self.writer: SummaryWriter = SummaryWriter(log_dir=str(self.log_dir))
         self.epoch_history: list[dict[str, Any]] = []
         self._epoch_start_ts: float = time.perf_counter()
 
