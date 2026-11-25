@@ -38,7 +38,7 @@ jobs:
 
       - name: Ensure no hardcoded absolute paths in tracked files
         run: |
-          if git grep -nE '(/[U]sers/|/[h]ome/|[C]:\\)'; then
+          if git grep -InE '(/[U]sers/|/[h]ome/|[C]:\\)'; then
             echo "Found forbidden absolute path!"
             exit 1
           fi
